@@ -1,0 +1,22 @@
+Vagrant.configure("2") do |config|
+	# Box
+	config.vm.box = "bento/ubuntu-24.04"
+	config.vm.box_version = "202510.26.0"
+	config.vm.box_architecture = :auto
+	config.vm.hostname = "ecommerce"
+
+	# Setup
+	config.vm.provision "shell", path: "setup.sh"
+	
+	# Provider
+	config.vm.provider "virtualbox" do |vb|
+		vb.memory = "2048"
+		vb.cpus = 2
+	end
+
+	# Network
+	config.vm.network "forwarded_port", guest: 3000, host: 8082
+	config.vm.network "forwarded_port", guest: 3001, host: 6001
+	config.vm.network "forwarded_port", guest: 3002, host: 6002
+	config.vm.network "forwarded_port", guest: 3003, host: 6003
+end
