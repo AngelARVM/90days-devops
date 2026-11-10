@@ -1,0 +1,25 @@
+---
+- name: Basic Server Setting
+  hosts: webservers
+  become: yes
+
+  tasks:
+    - name: Install essential packages
+      apt:
+        name: ["git", "tree", "htop"]
+        state: present
+        update_cache: yes
+
+    - name: Create deploy user
+      user:
+        name: deploy
+        groups: sudo
+        append: yes
+        password: "{{ 'myPassword123' | password_hash('sha512') }}"
+
+    - name: Enable firewall
+      ufw:
+        rule: allow
+        port: "22,80,443"
+        proto: tcp
+ 
