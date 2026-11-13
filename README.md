@@ -8,7 +8,7 @@ Tasks and exercises presented at https://90daysdevops.295devops.com/
   - [x] 3. Vagrant
   - [x] 4. Git & github
   - [x] 5. Automation & bash scripting
-  - [ ] 6. Ansible
+  - [x] 6. Ansible
   - [ ] 7. Challenge
 - [ ] Week 2
 - [ ] Week 3

@@ -1,0 +1,24 @@
+---
+- name: Generate SSH key on host
+  community.crypto.openssh_keypair:
+    path: "{{ playbook_dir }}/.keys/devops"
+    type: ed25519
+    regenerate: never
+  delegate_to: localhost
+  become: false
+
+
+- name: Create DevOps user
+  ansible.builtin.user:
+    name: devops
+    state: present
+    create_home: true
+    shell: /bin/bash
+    groups: sudo
+    append: true
+
+- name: Authorize SSH public key
+  ansible.posix.authorized_key:
+    user: devops
+    state: present
+    key: "{{ lookup('file', playbook_dir + '/.keys/devops.pub') }}"

@@ -1,0 +1,29 @@
+# Vagrant - cualquier nivel del repositorio
+.vagrant/
+*.box
+vagrant.log
+
+# Logs generados
+*.log
+logs/
+npm-debug.log*
+
+# Archivos temporales
+*.tmp
+*.temp
+*.bak
+*~
+.DS_Store
+Thumbs.db
+
+# Entornos Python (si los utilizás)
+__pycache__/
+.venv/
+*.pyc
+
+# Credenciales y configuración local
+.env
+.env.*
+!.env.example
+*.pem
+*.key

@@ -1,0 +1,25 @@
+---
+- name: setup web server
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Install ngnix
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+        update_cache: true
+
+    - name: Start nginx
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+        
+    - name: Deploy page
+      ansible.builtin.copy:
+        src: files/index.html
+        dest: /var/www/html/index.html
+        owner: www-data
+        group: www-data
+        mode: "0644"

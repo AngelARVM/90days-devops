@@ -1,0 +1,9 @@
+---
+- name: Configure Server
+  hosts: webservers
+  become: true
+
+  roles:
+    - nginx
+    - devops
+    - firewall
