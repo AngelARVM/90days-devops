@@ -1,0 +1,10 @@
+---
+- name: Configure voting application server
+  hosts: all
+  become: true
+
+  roles:
+    - common
+    - postgresql
+    - redis
+    - app

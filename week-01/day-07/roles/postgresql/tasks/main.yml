@@ -1,0 +1,27 @@
+---
+- name: Installing PostgreSQL
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - python3-psycopg2
+    state: present
+
+- name: Start and enable PostgreSQL
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Create vostes database
+  community.postgresql.postgresql_db:
+    name: votes
+    state: present
+  become_user: postgres
+
+- name: Configure postgres user password
+  community.postgresql.postgresql_user:
+    name: postgres
+    password: postgres
+    state: present
+  become_user: postgres
+

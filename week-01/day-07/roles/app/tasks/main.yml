@@ -1,0 +1,138 @@
+---
+- name: Create application directory
+  ansible.builtin.file:
+    path: /opt/roxs-voting-app
+    state: directory
+    mode: "0755"
+
+- name: Copy application files
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/roxs-voting-app/"
+    dest: /opt/roxs-voting-app
+    mode: preserve
+  notify:
+    - Restart Worker
+    - Restart Vote
+    - Restart Result
+
+- name: Create py venv
+  ansible.builtin.command:
+    cmd: python3 -m venv /opt/roxs-voting-app/vote/.venv
+    creates: /opt/roxs-voting-app/vote/.venv/bin/python
+
+- name: Install Vote dependencies
+  ansible.builtin.pip:
+    requirements: /opt/roxs-voting-app/vote/requirements.txt
+    virtualenv: /opt/roxs-voting-app/vote/.venv
+
+- name: Install Worker dependencies
+  community.general.npm:
+    path: /opt/roxs-voting-app/worker
+    state: present
+    ci: true
+    production: true
+
+- name: Install Result dependencies
+  community.general.npm:
+    path: /opt/roxs-voting-app/result
+    state: present
+    ci: true
+    production: true
+
+- name: Create application environment file
+  ansible.builtin.copy:
+    dest: /opt/roxs-voting-app/.env
+    mode: "0600"
+    content: |
+      REDIS_HOST=localhost
+      DATABASE_HOST=localhost
+      DATABASE_NAME=votes
+      DATABASE_USER=postgres
+      DATABASE_PASSWORD=postgres
+      APP_PORT=3000
+      WORKER_PORT=3001
+
+- name: Create Worker systemd service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/voting-worker.service
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Voting App Worker
+      Wants=redis-server.service postgresql.service
+      After=network.target redis-server.service postgresql.service
+
+      [Service]
+      Type=simple
+      WorkingDirectory=/opt/roxs-voting-app/worker
+      EnvironmentFile=/opt/roxs-voting-app/.env
+      ExecStart=/usr/bin/node /opt/roxs-voting-app/worker/main.js
+      Restart=on-failure
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Start and enable worker
+  ansible.builtin.systemd:
+    name: voting-worker
+    daemon_reload: true
+    state: started
+    enabled: true
+    
+
+- name: Create vote systemd service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/voting-vote.service
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Voting App - Vote
+      Wants=redis-server.service postgresql.service
+      After=network.target redis-server.service postgresql.service
+
+      [Service]
+      Type=simple
+      WorkingDirectory=/opt/roxs-voting-app/vote
+      EnvironmentFile=/opt/roxs-voting-app/.env
+      ExecStart=/opt/roxs-voting-app/vote/.venv/bin/gunicorn --bind 0.0.0.0:5000 app:app
+      Restart=on-failure
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Start and enable Vote
+  ansible.builtin.systemd:
+    name: voting-vote
+    daemon_reload: true
+    state: started
+    enabled: true
+
+- name: Create Result systemd service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/voting-result.service
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Voting App - Result
+      Wants=postgresql.service
+      After=network.target postgresql.service
+
+      [Service]
+      Type=simple
+      WorkingDirectory=/opt/roxs-voting-app/result
+      EnvironmentFile=/opt/roxs-voting-app/.env
+      ExecStart=/usr/bin/node /opt/roxs-voting-app/result/main.js
+      Restart=on-failure
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Start and enable Result
+  ansible.builtin.systemd:
+    name: voting-result
+    daemon_reload: true
+    state: started
+    enabled: true
